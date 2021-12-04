@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:core';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:dragscheduler/scheduler_model.dart';
-import 'package:dragscheduler/scheduler_provider.dart';
+
+import 'scheduler_model.dart';
+import 'scheduler_provider.dart';
 
 DateTime dispDate = new DateTime(2021,12,1,0,0,0);
 
@@ -22,7 +23,7 @@ double MARGIN_ITEM = 10.0;
 int DISP_DAYS = 5;
 int DISP_HOURS = 24;
 int GRID_SEC = 30*60;
-double CONTENT_WIDTH = 150.0;
+double CONTENT_WIDTH = 120.0;
 TextStyle TIME_TEXTSTYLE = TextStyle(color: Colors.white, fontSize: 12.0);
 TextStyle SCALE_TEXTSTYLE = TextStyle(color: Color(0xFF909090), fontSize: 12.0);
 TextStyle SCALE_HOUR_TEXTSTYLE = TextStyle(color: Color(0xFFF0F0F0), fontSize: 12.0);
@@ -40,6 +41,7 @@ Color COL_GRID_BORDER = Color(0xFF404040);
 Color COL_GRID_BORDER_SEL = Color(0xFFC0C0C0);
 
 class SchedulerScreen extends ConsumerWidget {
+  final GlobalKey _targetKey = GlobalKey();
   Size screenSize = Size(1000.0, 1000.0);
   Size gridSize = Size(100.0, 30.0);
   bool isInit = false;
@@ -48,7 +50,10 @@ class SchedulerScreen extends ConsumerWidget {
 
   resize(BuildContext context, WidgetRef ref) {
     final env = ref.watch(environmentProvider).data;
-    Size size = MediaQuery.of(context).size;
+
+    //Size size = MediaQuery.of(context).size;
+    Size size = _targetKey.currentContext!.size!;
+
     screenSize = size;
     double w = (screenSize.width - MENU_WIDTH - TIME_SCALE_WIDTH - CONTENT_WIDTH) / DISP_DAYS;
     double h = (screenSize.height - MENU_HEIGHT - TIME_HEADER_HEIGHT) / 20;
@@ -70,7 +75,8 @@ class SchedulerScreen extends ConsumerWidget {
     this.env = ref.watch(environmentProvider).data;
 
     return Scaffold(
-      backgroundColor: COL_MENU_BG,
+      key: _targetKey,
+      //backgroundColor: COL_MENU_BG,
       body: Stack(children: <Widget>[
         // button
         Positioned(

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:core';
 import 'dart:convert';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:dragscheduler/scheduler_model.dart';
+
+import 'scheduler_model.dart';
 
 /// sample data
 String sampleContent = '''[
@@ -141,3 +142,11 @@ class environmentNotifier extends ChangeNotifier {
     this.notifyListeners();
   }
 }
+
+final screenTypeProvider = StateProvider<int>((ref) {
+  return 1;
+});
+
+final isDarkProvider = StateProvider<bool>((ref) {
+  return false;
+});

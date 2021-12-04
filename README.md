@@ -1,4 +1,4 @@
-# Drag Scheduler
+# Content Scheduler
 
 - Flutter
 - Drag and Drop
