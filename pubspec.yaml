@@ -1,5 +1,5 @@
-name: contentscheduler
-description: contentscheduler
+name: scheduledropper
+description: scheduledropper
 version: 0.9.1
 
 environment:

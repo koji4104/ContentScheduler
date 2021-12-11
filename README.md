@@ -1,7 +1,7 @@
-# Content Scheduler
+# Schedule Dropper
 
 - Flutter
-- Drag and Drop
+- Drag and Drop Schedule on Timetable
 - Scale change
 
 <img src=img/img1.gif>
