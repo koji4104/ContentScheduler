@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'scheduler_provider.dart';
+import 'schedule_provider.dart';
 
 class Sidebar extends ConsumerWidget {
   bool isTitle = false;
+  int type = 2;
   Sidebar({Key? key, bool? isTitle}) : super(key: key){
     if(isTitle!=null) this.isTitle=isTitle;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    int type = ref.watch(screenTypeProvider);
-    return Drawer(
-      //backgroundColor: Color(0xFF444444),
+    this.type = ref.watch(screenTypeProvider);
+    final col = ref.watch(colorProvider);
+    this.isTitle = ref.watch(sidebarTypeProvider) == 2 ? true : false;
+
+    return Container(
+      width: isTitle ? 170 : 42,
+      child: Drawer(
+      //backgroundColor: col.sidebarColor,
       child: ListView(
         children: [
           MyListTile(
@@ -41,30 +47,28 @@ class Sidebar extends ConsumerWidget {
             ref: ref,
           ),
           MyListTile(
-            title: "Info",
+            title: "Notifications",
             icon: Icons.info_outline ,
             screenType: 5,
             ref: ref,
           ),
         ],
       ),
-    );
+    ));
   }
 
-  /// 
+  /// Tile
   Widget MyListTile({
     required String title, 
     required IconData icon, 
     required int screenType,
     required WidgetRef ref
   }){        
-    bool sel = ref.watch(screenTypeProvider)==screenType;
-    Color col = sel ? Colors.white : Colors.grey;
     return ListTile(
       contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 4),
       onTap: () { ref.read(screenTypeProvider.state).state = screenType; },
-      leading: Icon(icon, color: col, size: 32),
-      title: isTitle ? Text(title, style: TextStyle(color: Colors.white)) : null,
+      leading: (type==screenType) ? Icon(icon, color: Colors.blue, size: 32) : Icon(icon, color: Colors.grey, size: 32),
+      title: isTitle ? Text(title) : null,
     );
   }
 }

@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 import 'constants.dart';
-import 'storage_details.dart';
-import 'recent_files.dart';
-import 'my_files.dart';
+import 'chart_panel.dart';
+import 'detail_panel.dart';
+import 'progress_panel.dart';
 import 'responsive.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -15,7 +15,6 @@ class DashboardScreen extends StatelessWidget {
         padding: EdgeInsets.all(defaultPadding),
         child: Column(
           children: [
-            //Header(),
             SizedBox(height: defaultPadding),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,12 +23,12 @@ class DashboardScreen extends StatelessWidget {
                   flex: 5,
                   child: Column(
                     children: [
-                      MyFiles(),
+                      ProgressPanel(),
                       SizedBox(height: defaultPadding),
-                      RecentFiles(),
+                      DetailPanel(),
                       if (Responsive.isMobile(context))
                         SizedBox(height: defaultPadding),
-                      if (Responsive.isMobile(context)) StarageDetails(),
+                      if (Responsive.isMobile(context)) ChartPanel(),
                     ],
                   ),
                 ),
@@ -39,7 +38,7 @@ class DashboardScreen extends StatelessWidget {
                 if (!Responsive.isMobile(context))
                   Expanded(
                     flex: 2,
-                    child: StarageDetails(),
+                    child: ChartPanel(),
                   ),
               ],
             )

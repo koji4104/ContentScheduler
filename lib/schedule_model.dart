@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'dart:core';
+import 'package:uuid/uuid.dart';
 
 /// Data on the timetable
 class ScheduleData {
-  int scheduleID = -1;
-  int contentID = -1;
+  String scheduleid = '';
+  String contentid = '';
   DateTime d1 = DateTime(2021,12,1);
   DateTime d2 = DateTime(2021,12,1);
 
-  ScheduleData({DateTime? d1, DateTime? d2, int? contentID}) {
+  ScheduleData({DateTime? d1, DateTime? d2, String? contentid}) {
     if(d1 != null) this.d1 = d1;
     if(d2 != null) this.d2 = d2;
-    if(contentID != null) this.contentID = contentID;
-    this.scheduleID = ++scheduleCounter;
+    if(contentid != null) this.contentid = contentid;
+    this.scheduleid = Uuid().v1();
   }
 }
-int scheduleCounter = 0;
 
 /// Scheduled content
 class ContentData {
-  int contentID = -1;
+  String contentid = '';
   String name = "";
   Color col = Color(0);
 
-  ContentData({String? name, Color? col, int? contentID}) {
+  ContentData({String? name, Color? col, String? contentid}) {
     if(name != null) this.name = name;
     if(col != null) this.col = col;
-    if(contentID != null) this.contentID = contentID;
+    if(contentid != null) this.contentid = contentid;
   }
 }
 
@@ -35,27 +35,26 @@ class ContentData {
 /// Including data that is not used because it is common.
 class ItemData {
   int type = -1;
-  int itemID = -1;
+  String itemid = '';
   String name = "";
   DateTime d1 = DateTime(2020,01,01);
   DateTime d2 = DateTime(2020,01,01);
   Color col = Color(0xFF004488);
-  int scheduleID = -1;
-  int contentID = -1;
+  String scheduleid = '';
+  String contentid = '';
   Offset tapPos = Offset(0,0);
 
-  ItemData({DateTime? d1, DateTime? d2, String? name, int? contentID, int? scheduleID, int? type, Color? col}){
-    if(contentID != null) this.contentID = contentID;
-    if(scheduleID != null) this.scheduleID = scheduleID;
+  ItemData({DateTime? d1, DateTime? d2, String? name, String? contentid, String? scheduleid, int? type, Color? col}){
+    if(contentid != null) this.contentid = contentid;
+    if(scheduleid != null) this.scheduleid = scheduleid;
     if(d1 != null) this.d1 = d1;
     if(d2 != null) this.d2 = d2;
     if(name != null) this.name = name;
     if(type != null) this.type = type;
     if(col != null) this.col = col;
-    this.itemID = ++itemCounter;
+    this.itemid = Uuid().v1();
   }
 }
-int itemCounter = 0;
 
 /// Environment
 class EnvironmentData {
@@ -73,3 +72,4 @@ class EnvironmentData {
 
   double contentWidth = 150.0;
 }
+

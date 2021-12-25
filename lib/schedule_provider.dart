@@ -3,7 +3,7 @@ import 'dart:core';
 import 'dart:convert';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'scheduler_model.dart';
+import 'schedule_model.dart';
 
 /// sample data
 String sampleContent = '''[
@@ -28,7 +28,7 @@ class contentListNotifier extends ChangeNotifier {
     var json = jsonDecode(sampleContent);
     for(var con in json){
       list.add(ContentData(
-        contentID:int.parse(con['contentid']),
+        contentid:con['contentid'],
         name:con['name'],
         col:Color(int.parse(con['col']))
       ));
@@ -44,22 +44,22 @@ class scheduleListNotifier extends ChangeNotifier {
     var json = jsonDecode(sampleSchedule);
     for(var skd in json){
       list.add(ScheduleData(
-        contentID:int.parse(skd['contentid']),
+        contentid:skd['contentid'],
         d1:DateTime.parse(skd['d1']),
         d2:DateTime.parse(skd['d2'])
       ));
     }
   }
 
-  add(DateTime d1, DateTime d2, int contentID){
-    ScheduleData skd1 = ScheduleData(contentID: contentID, d1:d1, d2:d2);
+  add(DateTime d1, DateTime d2, String contentid){
+    ScheduleData skd1 = ScheduleData(contentid: contentid, d1:d1, d2:d2);
     list.add(skd1);
     this.notifyListeners();
   }
 
-  update(int scheduleID, DateTime d1, DateTime d2){
+  update(String scheduleid, DateTime d1, DateTime d2){
     for(ScheduleData skd in list) {
-      if(skd.scheduleID == scheduleID) {
+      if(skd.scheduleid == scheduleid) {
         skd.d1 = d1;
         skd.d2 = d2;
       }
@@ -74,12 +74,12 @@ final scheduleItemListProvider = StateProvider<List<ItemData>>((ref) {
 
   List<ItemData> sItemlist = [];
   for(ScheduleData skd in slist){
-    ContentData con = clist.firstWhere((el) => el.contentID==skd.contentID, orElse: () => ContentData());
-    if(con.contentID<0) continue;
+    ContentData con = clist.firstWhere((el) => el.contentid==skd.contentid, orElse: () => ContentData());
+    if(con.contentid=='') continue;
     ItemData d = ItemData(
       type:1,
-      contentID:skd.contentID,
-      scheduleID:skd.scheduleID,
+      contentid:skd.contentid,
+      scheduleid:skd.scheduleid,
       d1:skd.d1,
       d2:skd.d2,
       name:con.name,
@@ -97,7 +97,7 @@ final contentItemListProvider = StateProvider<List<ItemData>>((ref) {
   for(ContentData con in clist){
     ItemData d = ItemData(
       type:2,
-      contentID:con.contentID,
+      contentid:con.contentid,
       name:con.name,
       col:con.col,
     );
@@ -117,10 +117,10 @@ final screenSizeProvider = StateProvider<Size>((ref) {
 final selectContentProvider = ChangeNotifierProvider((ref) => selectListNotifier(ref));
 final selectListProvider = ChangeNotifierProvider((ref) => selectListNotifier(ref));
 class selectListNotifier extends ChangeNotifier {
-  List<int> list = [];
+  List<String> list = [];
   selectListNotifier(ref) {}
-  add(int id) {
-    if(id>0 && this.list.contains(id)==false) {
+  add(String id) {
+    if(id!='' && this.list.contains(id)==false) {
       list.add(id);
       this.notifyListeners();
     }
@@ -143,10 +143,35 @@ class environmentNotifier extends ChangeNotifier {
   }
 }
 
+/// 1=Dashboard, 2=Schedules
 final screenTypeProvider = StateProvider<int>((ref) {
-  return 1;
+  return 2;
+});
+
+final dispDateProvider = StateProvider<DateTime>((ref) {
+  return DateTime(2021,12,1,0,0,0);
 });
 
 final isDarkProvider = StateProvider<bool>((ref) {
   return false;
 });
+
+/// Sidebar 0=none, 1=icon, 2=Title
+final sidebarTypeProvider = StateProvider<int>((ref) {
+  return 1;
+});
+
+final colorProvider = ChangeNotifierProvider((ref) => colorNotifier(ref));
+class colorNotifier extends ChangeNotifier {
+  colorNotifier(ref) {
+    this.isDark = ref.watch(isDarkProvider);
+  }
+  bool isDark = true;
+  Color get panelBgColor => isDark ? Color(0xFF444444) : Color(0xFFEEEEEE);
+  Color get panelFgColor => isDark ? Color(0xFFFFFFFF) : Color(0xFF222222);
+  Color get gridColor => isDark ? Color(0xFF888888) : Color(0xFFFFFFFF);
+  Color get gridNightColor => isDark ? Color(0xFF666666) : Color(0xFFDDDDDD);
+  Color get menuBgColor => isDark ? Color(0xFF223355) : Color(0xFF223355);
+  Color get menuFgColor => isDark ? Color(0xFFFFFFFF) : Color(0xFFFFFFFF);
+  Color get sidebarColor => isDark ? Color(0xFF000000) : Color(0xFFFFFFFF);
+}

@@ -16,6 +16,7 @@ dependencies:
   flutter_svg: ^0.22.0
   data_table_2: ^2.0.3  
   google_fonts: ^2.1.0
+  uuid: ^3.0.5
 
 flutter:
   uses-material-design: true

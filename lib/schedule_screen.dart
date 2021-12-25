@@ -9,38 +9,32 @@ import 'package:flutter/rendering.dart';
 import 'dart:core';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'scheduler_model.dart';
-import 'scheduler_provider.dart';
-
-DateTime dispDate = new DateTime(2021,12,1,0,0,0);
+import 'schedule_model.dart';
+import 'schedule_provider.dart';
 
 double TIME_HEADER_HEIGHT = 20.0;
 double TIME_SCALE_WIDTH = 50.0;
-double MENU_HEIGHT = 40.0;
-double MENU_WIDTH = 40.0;
+double MENU_HEIGHT = 42.0;
+double MENU_WIDTH = 42.0;
 double MARGIN_BOTTOM = 20.0;
 double MARGIN_ITEM = 10.0;
 int DISP_DAYS = 5;
 int DISP_HOURS = 24;
 int GRID_SEC = 30*60;
 double CONTENT_WIDTH = 120.0;
-TextStyle TIME_TEXTSTYLE = TextStyle(color: Colors.white, fontSize: 12.0);
-TextStyle SCALE_TEXTSTYLE = TextStyle(color: Color(0xFF909090), fontSize: 12.0);
-TextStyle SCALE_HOUR_TEXTSTYLE = TextStyle(color: Color(0xFFF0F0F0), fontSize: 12.0);
+TextStyle TIME_TEXTSTYLE = TextStyle(fontSize: 12.0);
+TextStyle SCALE_TEXTSTYLE = TextStyle(fontSize: 12.0);
+TextStyle SCALE_HOUR_TEXTSTYLE = TextStyle(fontSize: 12.0);
 
-double ICON_SIZE = 32.0;
-double ICON_RADIUS = 32.0-8.0;
+double ICON_SIZE = 20.0;
+double ICON_RADIUS = 20.0-2.0;
 Color COL_ICON_BG = Color(0xFF0080F0);
 
-Color COL_MENU_BG = Color(0xFF404040);
-Color COL_TIME_BG = Color(0xFF202020);
-Color COL_GRID_BG = Color(0xFF808080);
-Color COL_GRID_BG_NIGHT = Color(0xFF707070);
 Color COL_GRID_BG_SEL = Color(0xFF7070A0);
 Color COL_GRID_BORDER = Color(0xFF404040);
 Color COL_GRID_BORDER_SEL = Color(0xFFC0C0C0);
 
-class SchedulerScreen extends ConsumerWidget {
+class ScheduleScreen extends ConsumerWidget {
   final GlobalKey _targetKey = GlobalKey();
   Size screenSize = Size(1000.0, 1000.0);
   Size gridSize = Size(100.0, 30.0);
@@ -48,18 +42,16 @@ class SchedulerScreen extends ConsumerWidget {
   final ScrollController _scrollController = ScrollController();
   EnvironmentData env = EnvironmentData();
 
+  DateTime dispDate = new DateTime(2021,12,1,0,0,0);
+
   resize(BuildContext context, WidgetRef ref) {
     final env = ref.watch(environmentProvider).data;
-
-    //Size size = MediaQuery.of(context).size;
     Size size = _targetKey.currentContext!.size!;
-
     screenSize = size;
     double w = (screenSize.width - MENU_WIDTH - TIME_SCALE_WIDTH - CONTENT_WIDTH) / DISP_DAYS;
     double h = (screenSize.height - MENU_HEIGHT - TIME_HEADER_HEIGHT) / 20;
     gridSize = Size(w, h);
-    print("-- screenSize=${screenSize.width.toInt()}x${screenSize.height.toInt()} dispHours=${env.dispHours} "
-        "gridSize=${gridSize.height.toInt()}");
+    //print("-- screenSize=${screenSize.width.toInt()}x${screenSize.height.toInt()}");
 
     ref.read(screenSizeProvider.state).state = screenSize;
     ref.read(gridSizeProvider.state).state = gridSize;
@@ -73,31 +65,50 @@ class SchedulerScreen extends ConsumerWidget {
 
     Future.delayed(Duration.zero, () => resize(context, ref));
     this.env = ref.watch(environmentProvider).data;
+    final col = ref.watch(colorProvider);
+    dispDate = ref.watch(dispDateProvider);
+    //print('-- ${dispDate.hour}');
 
     return Scaffold(
       key: _targetKey,
-      //backgroundColor: COL_MENU_BG,
       body: Stack(children: <Widget>[
         // button
         Positioned(
           top: 4, left: MENU_WIDTH,
           child: myButton(
-            text: '30',
-            backgroundColor: COL_ICON_BG,
-            onPressed: () => _onScale24(env, ref),
+            icon: Icons.zoom_out_outlined,
+            onPressed: () => _onZoomOut(env, ref),
           ),
         ),
         Positioned(
-          top: 4, left: MENU_WIDTH + 60,
+          top: 4, left: MENU_WIDTH + 40,
           child: myButton(
-            text: '5',
-            backgroundColor: COL_ICON_BG,
-            onPressed: () => _onScale6(env, ref),
+            icon: Icons.zoom_in_outlined,
+            onPressed: () => _onZoomIn(env, ref),
           ),
         ),
+
+        Positioned(
+          top: MENU_HEIGHT, left: 4,
+          child: myButton(
+            icon: Icons.arrow_upward ,
+            onPressed: () => _onScaleUp(env, ref),
+          ),
+        ),
+        Positioned(
+          top: MENU_HEIGHT + 40, left: 4,
+          child: myButton(
+            icon: Icons.arrow_downward,
+            onPressed: () => _onScaleDown(env, ref),
+          ),
+        ),
+
         Container(
           margin: EdgeInsets.only(left: MENU_WIDTH, top: MENU_HEIGHT),
-          decoration: BoxDecoration(color: COL_TIME_BG),
+          decoration: BoxDecoration(
+            color: col.panelBgColor,
+            borderRadius: BorderRadius.circular(0),
+          ),
           width: screenSize.width-MENU_WIDTH-CONTENT_WIDTH,
           child: Stack(children: <Widget>[
             timeHeader(),
@@ -133,8 +144,8 @@ class SchedulerScreen extends ConsumerWidget {
 
   /// timeTable
   Widget timeTable(List<ItemData> items) {
-    int nGrid = (env.dispHours*3600/env.gridSec).toInt(); // Number of grids per day
-    print("-- env.gridSec ${env.gridSec} gridSize.height ${gridSize.height.toInt()}");
+    int rowCount = (env.dispHours*3600/env.gridSec).toInt();
+    //print("-- env.gridSec ${env.gridSec} gridSize.height ${gridSize.height.toInt()}");
     return SizedBox(
       width:gridSize.width*DISP_DAYS + TIME_SCALE_WIDTH,
       child: Scrollbar(
@@ -146,15 +157,14 @@ class SchedulerScreen extends ConsumerWidget {
           controller: _scrollController,
           physics: AlwaysScrollableScrollPhysics(),
           child: SizedBox(
-            height: gridSize.height * (nGrid+1),
+            height: gridSize.height * (rowCount+1),
             child: Stack(children: <Widget>[
-              // Scale on the left. e.g. 01:00 12:15.
-              Stack(children: List<Widget>.generate(nGrid, (index) {
-                int totalsec = (index*env.gridSec).toInt();
+              // Scale
+              Stack(children: List<Widget>.generate(rowCount, (index) {
+                int totalsec = (index*env.gridSec).toInt() + dispDate.hour*3600;
                 int min = ((totalsec%3600)/60).toInt();
                 int hour = (totalsec/3600).toInt();
                 String s = hour.toString() +":"+ min.toString().padLeft(2,'0');
-
                 return (index%2==1) ? Container() : Positioned(
                   left: 0,
                   width: TIME_SCALE_WIDTH-5,
@@ -165,9 +175,9 @@ class SchedulerScreen extends ConsumerWidget {
                   : Text(s, style: SCALE_TEXTSTYLE, textAlign: TextAlign.right));
               })),
 
-              // Grid. Each cell every hour.
+              // Grid
               Stack(children: List.generate(DISP_DAYS, (day) {
-                return Stack(children: List.generate(nGrid, (index) {
+                return Stack(children: List.generate(rowCount, (index) {
                   int sec = (index*env.gridSec).toInt();
                   DateTime d1 = dispDate;
                   d1 = d1.add(Duration(days: day, seconds: sec));
@@ -177,7 +187,7 @@ class SchedulerScreen extends ConsumerWidget {
                 }));})
               ),
 
-              // Item. Schedule data on the grid.
+              // Item
               items.length==0 ? Container() : Stack(
                 children: List.generate(items.length, (index) {
                  return ItemWidget(items[index]);
@@ -200,28 +210,46 @@ class SchedulerScreen extends ConsumerWidget {
         child: IconButton(
           icon: Icon(icon),
           iconSize: ICON_SIZE,
-          color: Colors.white,
           onPressed: onPressed,
         )) : TextButton(
           onPressed: onPressed,
           style: TextButton.styleFrom(
-            backgroundColor: backgroundColor,
             shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(3)),
           )),
-          child: Text(text!, style: TextStyle(color: Colors.white, fontSize: 12.0), textAlign: TextAlign.center),
+          child: Text(text!, style: TextStyle(fontSize: 12.0), textAlign: TextAlign.center),
         );
   }
 
-  _onScale24(EnvironmentData env, WidgetRef ref) {
-    env.dispHours = 24;
-    env.gridSec = 30*60;
+  int selScale=0;
+  List<int>dispHourList = [24,12,6,1];
+  List<int>gridSecList = [30*60,15*60,5*60,1*60];
+  _onZoomOut(EnvironmentData env, WidgetRef ref) {
+    selScale = selScale-1<1 ? 0 : selScale-1;
+    env.gridSec = gridSecList[selScale];
+    env.dispHours = dispHourList[selScale];
     ref.read(environmentProvider).update(env);
   }
 
-  _onScale6(EnvironmentData env, WidgetRef ref) {
-    env.dispHours = 24;
-    env.gridSec = 5*60;
+  _onZoomIn(EnvironmentData env, WidgetRef ref) {
+    selScale = selScale+1>gridSecList.length-1 ? gridSecList.length-1 : selScale+1;
+    env.gridSec = gridSecList[selScale];
+    env.dispHours = dispHourList[selScale];
     ref.read(environmentProvider).update(env);
+  }
+
+  _onScaleUp(EnvironmentData env, WidgetRef ref) {
+    if(dispDate.hour>0) {
+      dispDate = dispDate.add(Duration(hours: -1));
+      ref.read(dispDateProvider.state).state = dispDate;
+    }
+  }
+
+  _onScaleDown(EnvironmentData env, WidgetRef ref) {
+    if(dispDate.hour<12) {
+      dispDate = dispDate.add(Duration(hours: 1));
+      ref.read(dispDateProvider.state).state = dispDate;
+      print('-- _onScaleDown=${dispDate.hour}');
+    }
   }
 }
 
@@ -234,6 +262,9 @@ class GridWidget extends ConsumerWidget {
   double width = 0;
   double height = 0;
   ItemData data = ItemData();
+  Color gridColor = Color(0xFF888888);
+  Color gridNightColor = Color(0xFF666666);
+  DateTime dispDate = new DateTime(2021,12,1,0,0,0);
 
   GridWidget(ItemData data1) {
     this.data = data1;
@@ -246,6 +277,10 @@ class GridWidget extends ConsumerWidget {
     final env = ref.watch(environmentProvider).data;
     resize(screenSize, gridSize, env);
     final scheduleList = ref.read(scheduleListProvider);
+    final col = ref.read(colorProvider);
+    dispDate = ref.watch(dispDateProvider);
+    gridColor = col.gridColor;
+    gridNightColor = col.gridNightColor;
 
     return Positioned(
       left: left, top: top, width: width, height: height,
@@ -267,11 +302,11 @@ class GridWidget extends ConsumerWidget {
 
                   int plussec = (dropData.tapPos.dy / gridSize.height).toInt() * env.gridSec;
                   DateTime d1 = data.d1.add(Duration(seconds:(-1)*plussec));
-                  scheduleList.update(dropData.scheduleID, d1, d1.add(dur));
+                  scheduleList.update(dropData.scheduleid, d1, d1.add(dur));
 
                 } else if(dropData.type == 2) {
                   Duration dur = Duration(seconds: env.gridSec * 4);
-                  scheduleList.add(data.d1, data.d1.add(dur), dropData.contentID);
+                  scheduleList.add(data.d1, data.d1.add(dur), dropData.contentid);
                 };
               }
               isWillAccept = false;
@@ -293,7 +328,7 @@ class GridWidget extends ConsumerWidget {
     double w = gridSize.width;
     double h = gridSize.height;
     left = w * data.d1.difference(dispDate).inDays + TIME_SCALE_WIDTH;
-    top = h * (data.d1.hour*3600 + data.d1.minute*60 + data.d1.second) / env.gridSec;
+    top = h * (data.d1.hour*3600 + data.d1.minute*60 + data.d1.second - dispDate.hour*3600) / env.gridSec;
     width = w;
     Duration dur = data.d2.difference(data.d1);
     height = h * (dur.inSeconds) / env.gridSec;
@@ -311,11 +346,11 @@ class GridWidget extends ConsumerWidget {
   }
 
   Color getColor() {
-    Color c = COL_GRID_BG;
+    Color c = gridColor;
     if(isWillAccept)
       c = COL_GRID_BG_SEL;
     else if (data.d1.hour < 6 || data.d1.hour >= 18)
-      c = COL_GRID_BG_NIGHT;
+      c = gridNightColor;
     return c;
   }
 }
@@ -333,13 +368,14 @@ class ItemWidget extends GridWidget {
     resize(screenSize, gridSize, env);
 
     final selectList = ref.watch(selectListProvider);
-    isSelected = selectList.list.contains(data.scheduleID);
+    isSelected = selectList.list.contains(data.scheduleid);
+    dispDate = ref.watch(dispDateProvider);
 
     return Positioned(
       left: left, top: top, width: width, height: height,
       child: GestureDetector(
         onTap:(){
-          selectList.add(data.scheduleID);
+          selectList.add(data.scheduleid);
         },
         onPanDown: (detail) {
           data.tapPos = detail.localPosition;
@@ -376,7 +412,7 @@ class ItemWidget extends GridWidget {
       child: Stack(children: <Widget>[
         Padding(
           padding: EdgeInsets.all(4.0),
-          child: Text(data.name, style: TextStyle(color: Colors.white, fontSize: 14.0))
+          child: Text(data.name, style: TextStyle(color: Colors.white, fontSize: 12.0))
         )
       ])
     );
@@ -408,13 +444,13 @@ class ContentWidget extends ItemWidget {
     resize(screenSize, gridSize, env);
 
     final selectList = ref.watch(selectContentProvider);
-    isSelected = selectList.list.contains(data.contentID);
+    isSelected = selectList.list.contains(data.contentid);
 
     return Positioned(
       left: left, top: top, width: width, height: height,
       child: GestureDetector(
         onTap:(){
-          selectList.add(data.contentID);
+          selectList.add(data.contentid);
         },
         child: Draggable(
           data: data,
@@ -432,7 +468,7 @@ class ContentWidget extends ItemWidget {
   @override
   void resize(Size screenSize, Size gridSize, EnvironmentData env){
     double w = gridSize.width;
-    double h = gridSize.height*2;
+    double h = gridSize.height*3;
     left = 10;
     top = listIndex * (h+1);
     width = CONTENT_WIDTH-20;

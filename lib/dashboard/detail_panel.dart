@@ -1,22 +1,26 @@
-import 'RecentFile.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import 'constants.dart';
+import 'detail_sample.dart';
+import 'detail_model.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class RecentFiles extends StatelessWidget {
-  const RecentFiles({
+import '../schedule_provider.dart';
+
+class DetailPanel extends ConsumerWidget {
+  const DetailPanel({
     Key? key,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final col = ref.watch(colorProvider);
     return Container(
       padding: EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
-        color: secondaryColor,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        color: col.panelBgColor,
+        borderRadius: const BorderRadius.all(Radius.circular(3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,19 +35,13 @@ class RecentFiles extends StatelessWidget {
               columnSpacing: defaultPadding,
               minWidth: 600,
               columns: [
-                DataColumn(
-                  label: Text("File Name"),
-                ),
-                DataColumn(
-                  label: Text("Date"),
-                ),
-                DataColumn(
-                  label: Text("Size"),
-                ),
+                DataColumn(label: Text("File Name")),
+                DataColumn(label: Text("Date")),
+                DataColumn(label: Text("Size")),
               ],
               rows: List.generate(
-                demoRecentFiles.length,
-                (index) => recentFileDataRow(demoRecentFiles[index]),
+                detailList.length,
+                (index) => DetailDataRow(detailList[index]),
               ),
             ),
           ),
@@ -53,27 +51,22 @@ class RecentFiles extends StatelessWidget {
   }
 }
 
-DataRow recentFileDataRow(RecentFile fileInfo) {
+DataRow DetailDataRow(DetailData fileInfo) {
   return DataRow(
     cells: [
       DataCell(
         Row(
           children: [
             Icon(Icons.insert_drive_file_outlined, size:30),
-            //SvgPicture.asset(
-            //  fileInfo.icon!,
-            //  height: 30,
-            //  width: 30,
-            //),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-              child: Text(fileInfo.title!),
+              child: Text(fileInfo.name),
             ),
           ],
         ),
       ),
-      DataCell(Text(fileInfo.date!)),
-      DataCell(Text(fileInfo.size!)),
+      DataCell(Text(fileInfo.date)),
+      DataCell(Text(fileInfo.size)),
     ],
   );
 }

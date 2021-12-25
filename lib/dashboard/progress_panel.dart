@@ -1,24 +1,80 @@
-import 'MyFiles.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'responsive.dart';
+import 'progress_sample.dart';
+import 'progress_model.dart';
 import 'constants.dart';
+import '../schedule_provider.dart';
 
-class FileInfoCard extends StatelessWidget {
-  const FileInfoCard({
+class ProgressPanel extends StatelessWidget {
+  const ProgressPanel({
     Key? key,
-    required this.info,
   }) : super(key: key);
-
-  final CloudStorageInfo info;
 
   @override
   Widget build(BuildContext context) {
+    final Size _size = MediaQuery.of(context).size;
+    return Column(
+      children: [
+        Responsive(
+          mobile: ProgressGridView(
+            crossAxisCount: _size.width < 650 ? 2 : 4,
+            childAspectRatio: _size.width < 650 ? 1.3 : 1,
+          ),
+          tablet: ProgressGridView(),
+          desktop: ProgressGridView(
+            childAspectRatio: _size.width < 1400 ? 1.1 : 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ProgressGridView extends StatelessWidget {
+  const ProgressGridView({
+    Key? key,
+    this.crossAxisCount = 4,
+    this.childAspectRatio = 1,
+  }) : super(key: key);
+
+  final int crossAxisCount;
+  final double childAspectRatio;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      physics: NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: progressList.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: defaultPadding,
+        mainAxisSpacing: defaultPadding,
+        childAspectRatio: childAspectRatio,
+      ),
+      itemBuilder: (context, index) => ProgressItem(data: progressList[index]),
+    );
+  }
+}
+
+class ProgressItem extends ConsumerWidget {
+  const ProgressItem({
+    Key? key,
+    required this.data,
+  }) : super(key: key);
+
+  final ProgressData data;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final col = ref.watch(colorProvider);
     return Container(
       padding: EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
-        color: secondaryColor,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        color: col.panelBgColor,
+        borderRadius: const BorderRadius.all(Radius.circular(3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,44 +88,40 @@ class FileInfoCard extends StatelessWidget {
                 height: 40,
                 width: 40,
                 decoration: BoxDecoration(
-                  color: info.color!.withOpacity(0.1),
+                  color: Color(data.col).withOpacity(0.5),
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child:
                 Icon(Icons.insert_drive_file_outlined, size:16),
-                //SvgPicture.asset(
-                //  info.svgSrc!,
-                //  color: info.color,
-                //),
               ),
-              Icon(Icons.more_vert, color: Colors.white54)
+              Icon(Icons.more_vert, color: col.panelFgColor)
             ],
           ),
           Text(
-            info.title!,
+            data.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           ProgressLine(
-            color: info.color,
-            percentage: info.percentage,
+            color: Color(data.col),
+            percentage: (100*data.value/data.total).toInt(),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${info.numOfFiles} Files",
+                "${data.value} Files",
                 style: Theme.of(context)
                     .textTheme
                     .caption!
-                    .copyWith(color: Colors.white70),
+                    .copyWith(color: col.panelFgColor),
               ),
               Text(
-                info.totalStorage!,
+                data.total.toString(),
                 style: Theme.of(context)
                     .textTheme
                     .caption!
-                    .copyWith(color: Colors.white),
+                    .copyWith(color: col.panelFgColor),
               ),
             ],
           )
@@ -115,3 +167,4 @@ class ProgressLine extends StatelessWidget {
     );
   }
 }
+
