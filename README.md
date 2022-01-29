@@ -1,4 +1,4 @@
-# Schedule Dropper
+# Drag Scheduler
 
 - Flutter
 - Drag and Drop Schedule on Timetable

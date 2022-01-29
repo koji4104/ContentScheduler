@@ -1,5 +1,5 @@
-name: scheduledropper
-description: scheduledropper
+name: dragscheduler
+description: dragscheduler
 version: 0.9.1
 
 environment:
